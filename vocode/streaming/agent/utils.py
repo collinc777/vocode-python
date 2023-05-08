@@ -1,4 +1,4 @@
-from typing import AsyncGenerator, AsyncIterable, Callable
+from typing import AsyncGenerator, AsyncIterable, Callable, List
 from openai.openai_object import OpenAIObject
 
 SENTENCE_ENDINGS = [".", "!", "?"]
@@ -7,7 +7,7 @@ SENTENCE_ENDINGS = [".", "!", "?"]
 async def stream_openai_response_async(
     gen: AsyncIterable[OpenAIObject],
     get_text: Callable[[dict], str],
-    sentence_endings: list[str] = SENTENCE_ENDINGS,
+    sentence_endings: List[str] = SENTENCE_ENDINGS,
 ) -> AsyncGenerator:
     buffer = ""
     async for event in gen:
@@ -26,3 +26,16 @@ async def stream_openai_response_async(
             buffer = ""
     if buffer.strip():
         yield buffer
+
+
+def find_last_punctuation(buffer: str):
+    indices = [buffer.rfind(ending) for ending in SENTENCE_ENDINGS]
+    return indices and max(indices)
+
+
+def get_sentence_from_buffer(buffer: str):
+    last_punctuation = find_last_punctuation(buffer)
+    if last_punctuation:
+        return buffer[: last_punctuation + 1], buffer[last_punctuation + 1 :]
+    else:
+        return None, None
